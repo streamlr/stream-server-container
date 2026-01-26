@@ -6,12 +6,40 @@ envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 # Start stunnel
 stunnel4 /etc/stunnel/stunnel.conf
 
-# Start the fallback stream initially (idle state)
-# We need to construct the URL manually or extract it, but since we have the env var:
-if [ ! -z "$KICK_STREAM_KEY" ]; then
-    echo "Starting initial fallback stream as www-data..."
-    su -s /bin/bash -c "/scripts/start_fallback.sh 'rtmp://127.0.0.1:19350/app/$KICK_STREAM_KEY'" www-data
-fi
+# Start the MASTER STREAMER (Persistent connection to Kick)
+# Listens on UDP (MPEG-TS), pushes to Stunnel -> Kick
+echo "Starting Master Streamer (UDP Listener)..."
+while true; do
+    ffmpeg -y -loglevel debug -f mpegts -re -i "udp://127.0.0.1:10000?fifo_size=5000000&overrun_nonfatal=1" \
+        -c:v libx264 -preset veryfast -b:v 2500k -maxrate 2500k -bufsize 5000k -pix_fmt yuv420p -g 60 \
+        -c:a aac -b:a 128k -ar 44100 \
+        -f flv "rtmp://127.0.0.1:19350/app/$KICK_STREAM_KEY" >/var/log/nginx/master.log 2>&1
+    echo "Master Streamer crashed. Log content:"
+    tail -n 10 /var/log/nginx/master.log
+    sleep 1
+done &
+
+# Trigger initial Fallback Feeder
+# MUST run as www-data to match other scripts
+echo "Starting initial Fallback Feeder..."
+su -s /bin/bash -c "/scripts/start_fallback.sh 'initial'" www-data &
+
+# Start the Live Push Listener (Wait for Nginx to push OBS stream here)
+echo "Starting Live Push Listener..."
+while true; do
+    # Listen on localhost:1936. When Nginx pushes, this wakes up.
+    # Convert incoming RTMP to MPEG-TS UDP for the master.
+    ffmpeg -y -listen 1 -i rtmp://127.0.0.1:1936/live/stream \
+        -c:v libx264 -preset veryfast -b:v 2500k -maxrate 2500k -bufsize 5000k -pix_fmt yuv420p -g 60 \
+        -c:a aac -b:a 128k -ar 44100 \
+        -f mpegts "udp://127.0.0.1:10000?pkt_size=1316" > /var/log/nginx/live_listener.log 2>&1
+    
+    echo "Live Listener finished (stream ended), restarting loop..."
+    sleep 1
+done &
 
 echo "Starting Nginx..."
-exec nginx -g "daemon off;"
+nginx -g "daemon off;" || {
+    echo "Nginx failed to start! Keeping container alive for debugging..."
+    tail -f /dev/null
+}
