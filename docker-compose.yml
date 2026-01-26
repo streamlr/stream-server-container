@@ -1,0 +1,12 @@
+services:
+  stream-server:
+    build: .
+    container_name: kick-stream-server
+    ports:
+      - "1935:1935"
+    volumes:
+      - ./assets:/assets
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    env_file:
+      - .env
+    restart: unless-stopped
