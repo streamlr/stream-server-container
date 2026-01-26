@@ -6,7 +6,11 @@ services:
       - "1935:1935"
     volumes:
       - ./assets:/assets
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf.template
     env_file:
       - .env
+    environment:
+      - KICK_STREAM_URL
+      - KICK_STREAM_KEY
+      - FALLBACK_VIDEO
     restart: unless-stopped
