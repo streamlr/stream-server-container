@@ -1,11 +1,10 @@
-FROM alpine:latest
+FROM ubuntu:24.04
 
 # Install Nginx, Nginx-RTMP module, and FFmpeg
-RUN apk add --no-cache \
+RUN apt update && apt upgrade -y && apt install -y \
     nginx \
-    nginx-mod-rtmp \
     ffmpeg \
-    bash
+    libnginx-mod-rtmp
 
 # Create necessary directories
 RUN mkdir -p /run/nginx /var/www/html /assets
