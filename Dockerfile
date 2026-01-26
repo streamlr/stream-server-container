@@ -17,7 +17,7 @@ COPY nginx.conf /etc/nginx/nginx.conf.template
 COPY stunnel.conf /etc/stunnel/stunnel.conf
 
 # Copy assets and scripts
-COPY assets /assets
+# COPY assets /assets
 COPY scripts /scripts
 COPY entrypoint.sh /entrypoint.sh
 
