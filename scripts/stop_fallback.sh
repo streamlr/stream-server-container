@@ -1,5 +1,5 @@
 #!/bin/bash
-sleep 5
+
 PID_FILE="/tmp/fallback.pid"
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")

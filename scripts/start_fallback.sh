@@ -20,8 +20,9 @@ fi
 
 echo "Starting fallback stream to $TARGET_URL"
 ffmpeg -re -stream_loop -1 -i /assets/fallback.mp4 \
-    -c:v libx264 -preset veryfast -maxrate 2500k -bufsize 5000k -pix_fmt yuv420p -g 60 \
+    -c:v libx264 -preset veryfast -tune zerolatency -maxrate 2500k -bufsize 2500k -pix_fmt yuv420p -g 60 \
     -c:a aac -b:a 128k -ar 44100 \
+    -flvflags no_duration_filesize \
     -f flv "$TARGET_URL" > /dev/null 2>&1 &
 
 echo $! > "$PID_FILE"
