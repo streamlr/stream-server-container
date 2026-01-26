@@ -14,7 +14,7 @@ RUN mkdir -p /run/nginx /var/www/html /assets
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY stunnel.conf /etc/stunnel/stunnel.conf
 
-CMD [ "stunnel4", "/etc/stunnel/stunnel.conf", "&&", "service", "nginx", "stop", "&&", "service", "nginx", "start" ]
+CMD [ "service", "stunnel4", "start", "&&", "service", "nginx", "stop", "&&", "service", "nginx", "start" ]
 
 # Expose RTMP port
 EXPOSE 1935
