@@ -1,26 +1,28 @@
 FROM ubuntu:24.04
 
-# Install Nginx, RTMP, FFmpeg, Stunnel and gettext-base (for envsubst)
+# Install Nginx, RTMP, FFmpeg, Stunnel, gettext-base, and procps (for pkill)
 RUN apt update && apt upgrade -y && apt install -y \
     nginx \
     ffmpeg \
     libnginx-mod-rtmp \
     stunnel4 \
-    gettext-base
+    gettext-base \
+    procps
 
 # Create necessary directories
 RUN mkdir -p /run/nginx /var/www/html /assets
 
-# Copy configuration and entrypoint
+# Copy configuration
 COPY nginx.conf /etc/nginx/nginx.conf.template
 COPY stunnel.conf /etc/stunnel/stunnel.conf
 
-# Use a shell script to start services and substitute environment variables
-RUN echo '#!/bin/sh\n\
-    envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf\n\
-    stunnel4 /etc/stunnel/stunnel.conf\n\
-    echo "Starting Nginx..."\n\
-    exec nginx -g "daemon off;"' > /entrypoint.sh && chmod +x /entrypoint.sh
+# Copy assets and scripts
+COPY assets /assets
+COPY scripts /scripts
+COPY entrypoint.sh /entrypoint.sh
+
+# Make scripts executable
+RUN chmod +x /entrypoint.sh /scripts/*.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
