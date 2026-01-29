@@ -30,8 +30,8 @@ while true; do
     # Convert incoming RTMP to MPEG-TS UDP for the master.
     ffmpeg -y -listen 1 -i rtmp://127.0.0.1:1936/live/stream \
         -vf scale=1920:1080 \
-        -c:v libx264 -preset superfast -b:v 2500k -maxrate 2500k -bufsize 5000k -pix_fmt yuv420p -g 60 \
-        -c:a aac -b:a 128k -ar 44100 \
+        -c:v libx264 -preset veryfast -b:v 4500k -maxrate 4500k -bufsize 9000k -pix_fmt yuv420p -g 60 \
+        -c:a aac -b:a 160k -ar 44100 \
         -f mpegts "udp://127.0.0.1:10000?pkt_size=1316" > /var/log/nginx/live_listener.log 2>&1
     
     echo "Live Listener finished (stream ended), restarting loop..."
