@@ -30,7 +30,7 @@ while true; do
     # Convert incoming RTMP to MPEG-TS UDP for the master.
     ffmpeg -y -listen 1 -i rtmp://127.0.0.1:1936/live/stream \
         -vf scale=1920:1080 \
-        -c:v libx264 -preset "${FFMPEG_PRESET:-superfast}" -b:v "${FFMPEG_BITRATE:-6000k}" -maxrate "${FFMPEG_BITRATE:-6000k}" -bufsize "${FFMPEG_BUFSIZE:-12000k}" -pix_fmt yuv420p -g 60 \
+        -c:v libx264 -preset "${FFMPEG_PRESET:-superfast}" -b:v "${FFMPEG_BITRATE:-8000k}" -maxrate "${FFMPEG_BITRATE:-8000k}" -bufsize "${FFMPEG_BUFSIZE:-16000k}" -pix_fmt yuv420p -force_key_frames "expr:gte(t,n_forced*2)" -sc_threshold 0 \
         -c:a aac -b:a 128k -ar 44100 \
         -f mpegts "udp://127.0.0.1:10000?pkt_size=1316" > /var/log/nginx/live_listener.log 2>&1
     
