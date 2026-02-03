@@ -9,8 +9,9 @@ stunnel4 /etc/stunnel/stunnel.conf
 # Start the MASTER STREAMER (Persistent connection to Kick)
 # Listens on UDP (MPEG-TS), pushes to Stunnel -> Kick
 echo "Starting Master Streamer (UDP Listener)..."
+sleep 3
 while true; do
-    ffmpeg -y -loglevel warning -f mpegts -re -i "udp://127.0.0.1:10000?fifo_size=5000000&overrun_nonfatal=1" \
+    ffmpeg -y -loglevel warning -f mpegts -re -i "udp://127.0.0.1:10000?fifo_size=${UDP_FIFO_SIZE:-10000000}&overrun_nonfatal=1" \
         -c copy \
         -f flv "rtmp://127.0.0.1:19350/app/$KICK_STREAM_KEY" >/var/log/nginx/master.log 2>&1
     echo "Master Streamer crashed. Log content:"
