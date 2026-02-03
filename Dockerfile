@@ -21,8 +21,9 @@ COPY stunnel.conf /etc/stunnel/stunnel.conf
 COPY scripts /scripts
 COPY entrypoint.sh /entrypoint.sh
 
-# Make scripts executable
-RUN chmod +x /entrypoint.sh /scripts/*.sh
+# Make scripts executable and fix line endings (CRLF to LF)
+RUN chmod +x /entrypoint.sh /scripts/*.sh && \
+    sed -i 's/\r$//' /entrypoint.sh /scripts/*.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
