@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Substitute environment variables in nginx.conf
+export STREAM_KEY=${STREAM_KEY:-stream}
 envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 # Start stunnel
@@ -29,7 +30,7 @@ echo "Starting Live Push Listener..."
 while true; do
     # Listen on localhost:1936. When Nginx pushes, this wakes up.
     # Convert incoming RTMP to MPEG-TS UDP for the master.
-    ffmpeg -y -listen 1 -i rtmp://127.0.0.1:1936/live/stream \
+    ffmpeg -y -listen 1 -i rtmp://127.0.0.1:1936/live/${STREAM_KEY} \
         -vf scale=1920:1080 \
         -c:v libx264 -preset "${FFMPEG_PRESET:-superfast}" -b:v "${FFMPEG_BITRATE:-8000k}" -maxrate "${FFMPEG_BITRATE:-8000k}" -bufsize "${FFMPEG_BUFSIZE:-16000k}" -pix_fmt yuv420p -force_key_frames "expr:gte(t,n_forced*2)" -sc_threshold 0 \
         -c:a aac -b:a 128k -ar 44100 \
