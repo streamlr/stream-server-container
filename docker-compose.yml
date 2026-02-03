@@ -13,4 +13,7 @@ services:
       - KICK_STREAM_URL
       - KICK_STREAM_KEY
       - FALLBACK_VIDEO
+      - FFMPEG_PRESET
+      - FFMPEG_BITRATE
+      - FFMPEG_BUFSIZE
     restart: unless-stopped
