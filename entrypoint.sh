@@ -20,6 +20,9 @@ if [ -z "$KICK_STREAM_HOST" ] && [ -n "$KICK_STREAM_URL" ]; then
     export KICK_STREAM_HOST
 fi
 
+# Stream key for Nginx RTMP app path (used in push URL)
+export STREAM_KEY=${STREAM_KEY:-stream}
+
 # Substitute environment variables in configs
 envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 envsubst < /etc/stunnel/stunnel.conf.template > /etc/stunnel/stunnel.conf
@@ -41,10 +44,14 @@ sleep 2
 # Start the MASTER STREAMER (Persistent connection to Kick)
 # Listens on UDP (MPEG-TS), pushes to Stunnel -> Kick. Reduced fifo_size for lower latency.
 echo "Starting Master Streamer (UDP Listener)..."
+sleep 3
 while true; do
-    ffmpeg -y -loglevel warning -f mpegts -re -i "udp://127.0.0.1:10000?fifo_size=150000&overrun_nonfatal=1" \
+    # No -re: input is already a live UDP stream. thread_queue_size for stability.
+    ffmpeg -y -loglevel warning \
+        -thread_queue_size 1024 \
+        -f mpegts -i "udp://127.0.0.1:10000?fifo_size=150000&overrun_nonfatal=1" \
         -c copy \
-        -f flv "rtmp://127.0.0.1:19350/app/$KICK_STREAM_KEY" >/var/log/nginx/master.log 2>&1
+        -f flv -flvflags no_duration_filesize "rtmp://127.0.0.1:19350/app/$KICK_STREAM_KEY" >/var/log/nginx/master.log 2>&1
     echo "Master Streamer crashed. Log content:"
     tail -n 10 /var/log/nginx/master.log
     sleep 1
@@ -53,7 +60,8 @@ done &
 # Start the Live Push Listener (Wait for Nginx to push OBS stream here)
 echo "Starting Live Push Listener..."
 while true; do
-    ffmpeg -y -listen 1 -i rtmp://127.0.0.1:1936/live/stream \
+    # Listen on localhost:1936. When Nginx pushes, this wakes up. Uses STREAM_KEY to match nginx push path.
+    ffmpeg -y -listen 1 -i "rtmp://127.0.0.1:1936/live/${STREAM_KEY}" \
         -vf scale=1920:1080 \
         -c:v libx264 -preset veryfast -b:v 4500k -maxrate 4500k -bufsize "${BUF_SIZE}" -pix_fmt yuv420p -g "${GOP_SIZE}" -tune zerolatency \
         -c:a aac -b:a 160k -ar 44100 \

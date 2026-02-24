@@ -14,6 +14,9 @@ services:
       - KICK_STREAM_KEY
       - KICK_STREAM_HOST
       - FALLBACK_VIDEO
+      - FFMPEG_PRESET
+      - FFMPEG_BITRATE
+      - FFMPEG_BUFSIZE
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "1935"]
