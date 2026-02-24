@@ -12,11 +12,11 @@ Si tu señal de origen se interrumpe, el servidor cambia automáticamente a un v
 
 ## Recursos VPS
 
-| Nivel | CPU | RAM | Bitrate recomendado | Preset recomendado |
-|-------|-----|-----|---------------------|--------------------|
-| **Mínimo** | 1–2 vCPU | 1 GB | 4500k–6000k | `superfast` o `ultrafast` |
-| **Recomendado** | 2–4 vCPU | 2–4 GB | 6000k–8000k | `veryfast` |
-| **Óptimo** | 4+ vCPU | 4+ GB | 8000k–12000k | `veryfast` o `fast` |
+| Nivel           | CPU      | RAM    | Bitrate recomendado | Preset recomendado        |
+| --------------- | -------- | ------ | ------------------- | ------------------------- |
+| **Mínimo**      | 1–2 vCPU | 1 GB   | 4500k–6000k         | `superfast` o `ultrafast` |
+| **Recomendado** | 2–4 vCPU | 2–4 GB | 6000k–8000k         | `veryfast`                |
+| **Óptimo**      | 4+ vCPU  | 4+ GB  | 8000k–12000k        | `veryfast` o `fast`       |
 
 Configura `FFMPEG_BITRATE` y `FFMPEG_PRESET` en tu `.env` según el nivel de tu VPS. Si el stream va a tirones o la CPU va al 100%, baja el bitrate o usa un preset más rápido (`ultrafast` < `superfast` < `veryfast` < `fast`).
 
