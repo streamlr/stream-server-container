@@ -63,7 +63,8 @@ http {
 rtmp {
     server {
         listen 1935;
-        chunk_size 4096;
+        chunk_size 8192;
+        ack_window 5000000;
         
         #Enable live broadcast service
         application live {
@@ -71,12 +72,13 @@ rtmp {
             record off;
             wait_key off;
             wait_video off;
+            idle_streams off;
             
             # Handler for fallback/live switching
             # When a stream starts (OBS connects), switch pipe to Live
             exec_publish /scripts/stop_fallback.sh;
             
-            push rtmp://127.0.0.1:1936/live/stream;
+            push rtmp://127.0.0.1:1936/live/${STREAM_KEY};
             
             # When a stream ends (OBS disconnects), switch pipe to Fallback
             exec_publish_done /scripts/start_fallback.sh;
