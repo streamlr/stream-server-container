@@ -39,6 +39,8 @@ Si tu señal de origen se interrumpe, el servidor cambia automáticamente a un v
     docker compose up -d --build
     ```
 2.  **Configurar OBS**:
+    - **Codificador**: x264 o NVIDIA NVENC H.264
+    - **Tasa de bits**: La misma que `FFMPEG_BITRATE` en tu `.env` (ej. 8000 para `8000k`)
     - **Servicio**: Personalizado
     - **Servidor**: `rtmp://localhost:1935/live` (o `rtmp://localhost:1935` si OBS pide servidor y app por separado)
     - **Clave de retransmisión**: `stream`
