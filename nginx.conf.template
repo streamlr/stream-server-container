@@ -69,10 +69,9 @@ rtmp {
         application live {
             live on;
             record off;
-            wait_key on;
-            wait_video on;
+            wait_key off;
+            wait_video off;
             
-            # Handler for fallback/live switching
             # Handler for fallback/live switching
             # When a stream starts (OBS connects), switch pipe to Live
             exec_publish /scripts/stop_fallback.sh;
@@ -84,25 +83,3 @@ rtmp {
         }
     }
 }
-
-
-#mail {
-#       # See sample authentication script at:
-#       # http://wiki.nginx.org/ImapAuthenticateWithApachePhpScript
-#
-#       # auth_http localhost/auth.php;
-#       # pop3_capabilities "TOP" "USER";
-#       # imap_capabilities "IMAP4rev1" "UIDPLUS";
-#
-#       server {
-#               listen     localhost:110;
-#               protocol   pop3;
-#               proxy      on;
-#       }
-#
-#       server {
-#               listen     localhost:143;
-#               protocol   imap;
-#               proxy      on;
-#       }
-#}

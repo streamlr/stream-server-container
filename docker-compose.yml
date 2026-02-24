@@ -6,11 +6,18 @@ services:
       - "1935:1935"
     volumes:
       - ./assets:/assets
-      - ./nginx.conf:/etc/nginx/nginx.conf.template
+      - ./nginx.conf.template:/etc/nginx/nginx.conf.template
     env_file:
       - .env
     environment:
       - KICK_STREAM_URL
       - KICK_STREAM_KEY
+      - KICK_STREAM_HOST
       - FALLBACK_VIDEO
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "1935"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

@@ -24,7 +24,7 @@ Si tu señal de origen se interrumpe, el servidor cambia automáticamente a un v
     KICK_STREAM_KEY=sk_tu-clave-de-retransmision
     ```
 3.  **Video de Fallback**:
-    Coloca un video llamado `fallback.mp4` en la carpeta `assets/`. Si no pones ninguno, el servidor generará un video negro automáticamente al iniciar.
+    Coloca un video llamado `fallback.mp4` en la carpeta `assets/` (o configura `FALLBACK_VIDEO` en `.env`). Si el archivo no existe, el servidor generará automáticamente video negro con silencio para que la conexión con Kick no se corte.
 
 ## Uso
 
@@ -34,15 +34,15 @@ Si tu señal de origen se interrumpe, el servidor cambia automáticamente a un v
     ```
 2.  **Configurar OBS**:
     - **Servicio**: Personalizado
-    - **Servidor**: `rtmp://localhost:1935/ingest`
+    - **Servidor**: `rtmp://localhost:1935/live` (o `rtmp://localhost:1935` si OBS pide servidor y app por separado)
     - **Clave de retransmisión**: `stream`
 
 ## Cómo funciona
 
 - El servidor Docker está "siempre encendido", transmitiendo el video de fallback a Kick.
-- Cuando empiezas a emitir desde OBS a `rtmp://localhost:1935/ingest/stream`, el servidor detecta la señal.
-- Usando un filtro de **overlay** de FFmpeg, tu señal se coloca encima del video de fallback.
-- Si dejas de transmitir, el overlay desaparece y vuelve a verse el video de fallback, pero el proceso de FFmpeg que envía datos a Kick nunca se detiene.
+- Cuando empiezas a emitir desde OBS a `rtmp://localhost:1935/live/stream`, el servidor detecta la señal.
+- Tu señal en vivo sustituye al video de fallback en el pipe hacia Kick.
+- Si dejas de transmitir, el servidor vuelve a enviar el video de fallback (o video negro si no hay archivo); el proceso que envía datos a Kick no se detiene.
 
 ## Comandos Útiles
 

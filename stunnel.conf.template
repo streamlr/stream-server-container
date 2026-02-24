@@ -1,0 +1,5 @@
+[kick-live]
+client = yes
+accept = 127.0.0.1:19350
+connect = ${KICK_STREAM_HOST}:443
+verifyChain = no

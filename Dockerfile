@@ -7,14 +7,15 @@ RUN apt update && apt upgrade -y && apt install -y \
     libnginx-mod-rtmp \
     stunnel4 \
     gettext-base \
-    procps
+    procps \
+    netcat-openbsd
 
 # Create necessary directories
 RUN mkdir -p /run/nginx /var/www/html /assets
 
-# Copy configuration
-COPY nginx.conf /etc/nginx/nginx.conf.template
-COPY stunnel.conf /etc/stunnel/stunnel.conf
+# Copy configuration (template is processed by envsubst in entrypoint)
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
+COPY stunnel.conf.template /etc/stunnel/stunnel.conf.template
 
 # Copy assets and scripts
 # COPY assets /assets
