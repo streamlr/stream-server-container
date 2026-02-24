@@ -1,0 +1,23 @@
+{
+  "files.associations": {
+    "*.template": "nginx"
+  },
+  "search.exclude": {
+    "**/.env": true
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[shellscript]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": false
+  },
+  "[yaml]": {
+    "editor.tabSize": 2
+  },
+  "[json]": {
+    "editor.tabSize": 2
+  },
+  "[markdown]": {
+    "editor.wordWrap": "on"
+  }
+}
