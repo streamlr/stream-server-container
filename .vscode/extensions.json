@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "ms-azuretools.vscode-docker",
+    "william-voyek.vscode-nginx",
+    "timonwong.shellcheck",
+    "mikestead.dotenv"
+  ]
+}
