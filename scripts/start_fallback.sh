@@ -5,8 +5,10 @@
 
 # Same encoding params as Live Listener (low latency)
 GOP="${GOP_SIZE:-30}"
-BUF="${BUF_SIZE:-4500k}"
-FFMPEG_VIDEO="-vf scale=1920:1080 -c:v libx264 -preset veryfast -b:v 4500k -maxrate 4500k -bufsize ${BUF} -pix_fmt yuv420p -g ${GOP} -tune zerolatency"
+BUF="${BUF_SIZE:-16000k}"
+BITRATE="${FFMPEG_BITRATE:-8000k}"
+PRESET="${FFMPEG_PRESET:-veryfast}"
+FFMPEG_VIDEO="-vf scale=1920:1080 -c:v libx264 -preset ${PRESET} -b:v ${BITRATE} -maxrate ${BITRATE} -bufsize ${BUF} -pix_fmt yuv420p -g ${GOP} -tune zerolatency"
 FFMPEG_AUDIO="-c:a aac -b:a 160k -ar 44100"
 
 FALLBACK_FILE="${FALLBACK_VIDEO:-/assets/fallback.mp4}"
@@ -26,7 +28,7 @@ run_fallback() {
     else
         echo "$(date): $FALLBACK_FILE not found, using black + silence" >> /tmp/switch.log
         ffmpeg -f lavfi -i "color=c=black:s=1920x1080:r=30" -f lavfi -i anullsrc=r=44100:cl=stereo \
-            -c:v libx264 -preset veryfast -b:v 4500k -maxrate 4500k -bufsize "${BUF}" -pix_fmt yuv420p -g "${GOP}" -tune zerolatency \
+            -c:v libx264 -preset "${PRESET}" -b:v "${BITRATE}" -maxrate "${BITRATE}" -bufsize "${BUF}" -pix_fmt yuv420p -g "${GOP}" -tune zerolatency \
             $FFMPEG_AUDIO \
             -f mpegts "udp://127.0.0.1:10000?pkt_size=1316" >> /tmp/fallback_error.log 2>&1
     fi

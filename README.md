@@ -25,6 +25,12 @@ Si tu señal de origen se interrumpe, el servidor cambia automáticamente a un v
     ```
 3.  **Video de Fallback**:
     Coloca un video llamado `fallback.mp4` en la carpeta `assets/` (o configura `FALLBACK_VIDEO` en `.env`). Si el archivo no existe, el servidor generará automáticamente video negro con silencio para que la conexión con Kick no se corte.
+4.  **Calidad de video** (opcional): Si la imagen se ve pixelada, ajusta en `.env`:
+    ```env
+    FFMPEG_BITRATE=8000k      # Bitrate (por defecto 8000k para 1080p)
+    FFMPEG_BUFSIZE=16000k     # Buffer (suele ser 2× bitrate)
+    FFMPEG_PRESET=veryfast    # veryfast, superfast, ultrafast (más rápido = menos calidad)
+    ```
 
 ## Uso
 
