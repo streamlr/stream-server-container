@@ -14,16 +14,17 @@ Servidor de streaming en Docker para **Kick**. Recibe RTMP desde OBS (o similar)
 
 ## Estructura de archivos
 
-| Archivo                     | Rol                                                                                                                                         |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entrypoint.sh`             | Orden de arranque: validación env, envsubst (nginx + stunnel), stunnel, fallback inicial, Master Streamer, Live Listener, Nginx             |
-| `scripts/start_fallback.sh` | Alimenta UDP 10000 con `FALLBACK_VIDEO` o video negro (lavfi); bucle de reintento; guarda PID en `/tmp/feeder.pid`                          |
-| `scripts/stop_fallback.sh`  | Mata el fallback por PID (`/tmp/feeder.pid`) y por patrón; llamado por Nginx al conectar OBS                                                |
-| `nginx.conf`                | Template Nginx HTTP + RTMP: app `live` en 1935, `exec_publish` → stop_fallback, `exec_publish_done` → start_fallback, push a 127.0.0.1:1936 |
-| `stunnel.conf.template`     | Template Stunnel; `connect = ${KICK_STREAM_HOST}:443`; se genera con envsubst                                                               |
-| `docker-compose.yml`        | Build, puerto 1935, volúmenes `./assets`, `./nginx.conf` como template, env, healthcheck                                                    |
-| `Dockerfile`                | Ubuntu 24.04, nginx, ffmpeg, libnginx-mod-rtmp, stunnel4, gettext-base, procps, netcat-openbsd                                              |
-| `.env.example`              | Ejemplo de `KICK_STREAM_URL`, `KICK_STREAM_KEY`, `FALLBACK_VIDEO`, opcional `KICK_STREAM_HOST`                                              |
+| Archivo                           | Rol                                                                                                                                         |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/entrypoint.sh`           | Orden de arranque: validación env, envsubst (nginx + stunnel), stunnel, fallback inicial, Master Streamer, Live Listener, Nginx             |
+| `scripts/start_fallback.sh`       | Alimenta UDP 10000 con `FALLBACK_VIDEO` o video negro (lavfi); bucle de reintento; guarda PID en `/tmp/feeder.pid`                          |
+| `scripts/stop_fallback.sh`        | Mata el fallback por PID (`/tmp/feeder.pid`) y por patrón; llamado por Nginx al conectar OBS                                                |
+| `templates/nginx.conf.template`   | Template Nginx HTTP + RTMP: app `live` en 1935, `exec_publish` → stop_fallback, `exec_publish_done` → start_fallback, push a 127.0.0.1:1936 |
+| `templates/stunnel.conf.template` | Template Stunnel; `connect = ${KICK_STREAM_HOST}:443`; se genera con envsubst                                                               |
+| `reference/`                      | Copias de configs antiguas (no usadas por el contenedor); ver `reference/README.md`                                                         |
+| `docker-compose.yml`              | Build, puerto 1935, volúmenes `./assets`, `./templates/nginx.conf.template`, env, healthcheck                                               |
+| `Dockerfile`                      | Ubuntu 24.04, nginx, ffmpeg, libnginx-mod-rtmp, stunnel4, gettext-base, procps, netcat-openbsd                                              |
+| `.env.example`                    | Ejemplo de `KICK_STREAM_URL`, `KICK_STREAM_KEY`, `FALLBACK_VIDEO`, opcional `KICK_STREAM_HOST`                                              |
 
 ## Flujo de señal
 

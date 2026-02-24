@@ -13,20 +13,18 @@ RUN apt update && apt upgrade -y && apt install -y \
 # Create necessary directories
 RUN mkdir -p /run/nginx /var/www/html /assets
 
-# Copy configuration (template is processed by envsubst in entrypoint)
-COPY nginx.conf.template /etc/nginx/nginx.conf.template
-COPY stunnel.conf.template /etc/stunnel/stunnel.conf.template
+# Copy configuration (templates processed by envsubst in entrypoint)
+COPY templates/nginx.conf.template /etc/nginx/nginx.conf.template
+COPY templates/stunnel.conf.template /etc/stunnel/stunnel.conf.template
 
-# Copy assets and scripts
-# COPY assets /assets
+# Copy all scripts (including entrypoint)
 COPY scripts /scripts
-COPY entrypoint.sh /entrypoint.sh
 
 # Make scripts executable and fix line endings (CRLF to LF)
-RUN chmod +x /entrypoint.sh /scripts/*.sh && \
-    sed -i 's/\r$//' /entrypoint.sh /scripts/*.sh
+RUN chmod +x /scripts/*.sh && \
+    sed -i 's/\r$//' /scripts/*.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/scripts/entrypoint.sh"]
 
 # Expose RTMP port
 EXPOSE 1935

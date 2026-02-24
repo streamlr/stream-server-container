@@ -6,7 +6,7 @@ services:
       - "1935:1935"
     volumes:
       - ./assets:/assets
-      - ./nginx.conf.template:/etc/nginx/nginx.conf.template
+      - ./templates/nginx.conf.template:/etc/nginx/nginx.conf.template
     env_file:
       - .env
     environment:
