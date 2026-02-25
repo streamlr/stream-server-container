@@ -36,23 +36,29 @@ FFMPEG_BITRATE="${FFMPEG_BITRATE:-8000k}"
 FFMPEG_BUFSIZE="${FFMPEG_BUFSIZE:-16000k}"
 FFMPEG_PRESET="${FFMPEG_PRESET:-veryfast}"
 BUF_SIZE="${BUF_SIZE:-$FFMPEG_BUFSIZE}"
-export GOP_SIZE BUF_SIZE FFMPEG_BITRATE FFMPEG_BUFSIZE FFMPEG_PRESET
+# UDP buffer: higher = fewer underruns/tearing, lower = less latency (default 1M for stability)
+UDP_FIFO_SIZE="${UDP_FIFO_SIZE:-1000000}"
+# Output framerate (match OBS: 60 for gaming, 30 for lower bandwidth)
+STREAM_FPS="${STREAM_FPS:-60}"
+# Debounce antes de iniciar fallback cuando OBS desconecta (evita flicker en reconexiones breves)
+FALLBACK_DELAY="${FALLBACK_DELAY:-0.5}"
+export GOP_SIZE BUF_SIZE FFMPEG_BITRATE FFMPEG_BUFSIZE FFMPEG_PRESET UDP_FIFO_SIZE STREAM_FPS FALLBACK_DELAY
 
 # Trigger initial Fallback Feeder FIRST so Master has data from the start
 # MUST run as www-data to match other scripts; pass env for FALLBACK_VIDEO and latency params
 echo "Starting initial Fallback Feeder..."
-su -s /bin/bash -c "export FALLBACK_VIDEO=\"$FALLBACK_VIDEO\"; export GOP_SIZE=\"$GOP_SIZE\"; export BUF_SIZE=\"$BUF_SIZE\"; export FFMPEG_BITRATE=\"$FFMPEG_BITRATE\"; export FFMPEG_PRESET=\"$FFMPEG_PRESET\"; /scripts/start_fallback.sh 'initial'" www-data &
+su -s /bin/bash -c "export FALLBACK_VIDEO=\"$FALLBACK_VIDEO\"; export GOP_SIZE=\"$GOP_SIZE\"; export BUF_SIZE=\"$BUF_SIZE\"; export FFMPEG_BITRATE=\"$FFMPEG_BITRATE\"; export FFMPEG_PRESET=\"$FFMPEG_PRESET\"; export STREAM_FPS=\"$STREAM_FPS\"; /scripts/start_fallback.sh 'initial'" www-data &
 sleep 2
 
 # Start the MASTER STREAMER (Persistent connection to Kick)
-# Listens on UDP (MPEG-TS), pushes to Stunnel -> Kick. Reduced fifo_size for lower latency.
+# Listens on UDP (MPEG-TS), pushes to Stunnel -> Kick. fifo_size absorbs underruns (tearing/banding).
 echo "Starting Master Streamer (UDP Listener)..."
 sleep 3
 while true; do
-    # No -re: input is already a live UDP stream. thread_queue_size for stability.
+    # No -re: input is already a live UDP stream. Larger fifo_size = fewer underruns.
     ffmpeg -y -loglevel warning \
-        -thread_queue_size 1024 \
-        -f mpegts -i "udp://127.0.0.1:10000?fifo_size=150000&overrun_nonfatal=1" \
+        -thread_queue_size 2048 \
+        -f mpegts -i "udp://127.0.0.1:10000?fifo_size=${UDP_FIFO_SIZE}&overrun_nonfatal=1" \
         -c copy \
         -f flv -flvflags no_duration_filesize "rtmp://127.0.0.1:19350/app/$KICK_STREAM_KEY" >/var/log/nginx/master.log 2>&1
     echo "Master Streamer crashed. Log content:"
@@ -64,11 +70,13 @@ done &
 echo "Starting Live Push Listener..."
 while true; do
     # Listen on localhost:1936. When Nginx pushes, this wakes up. Uses STREAM_KEY to match nginx push path.
-    ffmpeg -y -listen 1 -i "rtmp://127.0.0.1:1936/live/${STREAM_KEY}" \
-        -vf scale=1920:1080 \
+    # thread_queue_size: buffer for bursty OBS input. -vsync cfr: constant framerate to avoid tearing.
+    ffmpeg -y -loglevel warning \
+        -thread_queue_size 2048 -listen 1 -i "rtmp://127.0.0.1:1936/live/${STREAM_KEY}" \
+        -vf "scale=1920:1080,fps=${STREAM_FPS}" \
         -c:v libx264 -preset "${FFMPEG_PRESET}" -b:v "${FFMPEG_BITRATE}" -maxrate "${FFMPEG_BITRATE}" -bufsize "${FFMPEG_BUFSIZE}" -pix_fmt yuv420p -g "${GOP_SIZE}" -tune zerolatency \
         -c:a aac -b:a 160k -ar 44100 \
-        -f mpegts "udp://127.0.0.1:10000?pkt_size=1316" > /var/log/nginx/live_listener.log 2>&1
+        -vsync cfr -f mpegts "udp://127.0.0.1:10000?pkt_size=1316" > /var/log/nginx/live_listener.log 2>&1
     echo "Live Listener finished (stream ended), restarting loop..."
     sleep 1
 done &

@@ -12,6 +12,9 @@ fi
 
 echo "$(date): Switching to Live Source ($STREAM_NAME)..." >> /tmp/switch.log
 
+# Signal that OBS is live (used by start_fallback to debounce brief disconnects)
+touch /tmp/live_active
+
 # Prefer killing by PID saved by start_fallback.sh to avoid leaving fallback running
 if [ -f /tmp/feeder.pid ]; then
     PID=$(cat /tmp/feeder.pid)

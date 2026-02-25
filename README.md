@@ -12,13 +12,13 @@ Si tu señal de origen se interrumpe, el servidor cambia automáticamente a un v
 
 ## Recursos VPS
 
-| Nivel           | CPU      | RAM    | Bitrate recomendado | Preset recomendado        |
-| --------------- | -------- | ------ | ------------------- | ------------------------- |
-| **Mínimo**      | 1–2 vCPU | 1 GB   | 4500k–6000k         | `superfast` o `ultrafast` |
-| **Recomendado** | 2–4 vCPU | 2–4 GB | 6000k–8000k         | `veryfast`                |
-| **Óptimo**      | 4+ vCPU  | 4+ GB  | 8000k–12000k        | `veryfast` o `fast`       |
+| Nivel           | CPU      | RAM    | FPS | Bitrate recomendado | Preset recomendado        |
+| --------------- | -------- | ------ | --- | ------------------- | ------------------------- |
+| **Mínimo**      | 1–2 vCPU | 1 GB   | 30  | 4500k–6000k         | `superfast` o `ultrafast` |
+| **Recomendado** | 2–4 vCPU | 2–4 GB | 60  | 6000k–8000k         | `veryfast`                |
+| **Óptimo**      | 4+ vCPU  | 4+ GB  | 60  | 8000k–12000k        | `veryfast` o `fast`       |
 
-Configura `FFMPEG_BITRATE` y `FFMPEG_PRESET` en tu `.env` según el nivel de tu VPS. Si el stream va a tirones o la CPU va al 100%, baja el bitrate o usa un preset más rápido (`ultrafast` < `superfast` < `veryfast` < `fast`).
+Configura `FFMPEG_BITRATE`, `FFMPEG_PRESET` y `STREAM_FPS` en tu `.env` según el nivel de tu VPS. Si el stream va a tirones o la CPU va al 100%, baja el bitrate, reduce los FPS (ej. 30) o usa un preset más rápido (`ultrafast` < `superfast` < `veryfast` < `fast`).
 
 ## Configuración Rápida
 
@@ -40,6 +40,15 @@ Configura `FFMPEG_BITRATE` y `FFMPEG_PRESET` en tu `.env` según el nivel de tu 
     FFMPEG_BITRATE=8000k      # Bitrate (por defecto 8000k para 1080p)
     FFMPEG_BUFSIZE=16000k     # Buffer (suele ser 2× bitrate)
     FFMPEG_PRESET=veryfast    # veryfast, superfast, ultrafast (más rápido = menos calidad)
+    ```
+5.  **Bandas horizontales / tearing** (opcional): Si el stream se ve "glitcheado" o con bandas, aumenta el buffer UDP:
+    ```env
+    UDP_FIFO_SIZE=1000000     # Default. Prueba 5000000 o 10000000 si persiste
+    STREAM_FPS=60             # Debe coincidir con OBS (60 para gaming, 30 para ahorrar)
+    ```
+6.  **Cortes entre OBS y fallback** (opcional): Si el stream parpadea entre tu señal y el fallback, aumenta el debounce. Si el fallback tarda en aparecer, bájalo o ponlo a 0:
+    ```env
+    FALLBACK_DELAY=0.5        # Segundos antes de activar fallback (default 0.5). 0 = inmediato. Más alto = menos parpadeo
     ```
 
 ## Uso

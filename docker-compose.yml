@@ -17,6 +17,9 @@ services:
       - FFMPEG_PRESET
       - FFMPEG_BITRATE
       - FFMPEG_BUFSIZE
+      - UDP_FIFO_SIZE
+      - STREAM_FPS
+      - FALLBACK_DELAY
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "1935"]
