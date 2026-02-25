@@ -6,9 +6,9 @@
 # If OBS reconnects during that time, we skip starting (avoids flicker between OBS and fallback).
 
 # Same encoding params as Live Listener (low latency)
-GOP="${GOP_SIZE:-30}"
-BUF="${BUF_SIZE:-16000k}"
-BITRATE="${FFMPEG_BITRATE:-8000k}"
+GOP="${GOP_SIZE:-15}"
+BUF="${BUF_SIZE:-20000k}"
+BITRATE="${FFMPEG_BITRATE:-10000k}"
 PRESET="${FFMPEG_PRESET:-veryfast}"
 FPS="${STREAM_FPS:-60}"
 FFMPEG_VIDEO="-vf scale=1920:1080,fps=${FPS} -c:v libx264 -preset ${PRESET} -b:v ${BITRATE} -maxrate ${BITRATE} -bufsize ${BUF} -pix_fmt yuv420p -g ${GOP} -tune zerolatency"

@@ -37,16 +37,24 @@ Configura `FFMPEG_BITRATE`, `FFMPEG_PRESET` y `STREAM_FPS` en tu `.env` según e
     Coloca un video llamado `fallback.mp4` en la carpeta `assets/` (o configura `FALLBACK_VIDEO` en `.env`). Si el archivo no existe, el servidor generará automáticamente video negro con silencio para que la conexión con Kick no se corte.
 4.  **Calidad de video** (opcional): Si la imagen se ve pixelada, ajusta en `.env`:
     ```env
-    FFMPEG_BITRATE=8000k      # Bitrate (por defecto 8000k para 1080p)
-    FFMPEG_BUFSIZE=16000k     # Buffer (suele ser 2× bitrate)
-    FFMPEG_PRESET=veryfast    # veryfast, superfast, ultrafast (más rápido = menos calidad)
+    FFMPEG_BITRATE=10000k     # Bitrate (10000k recomendado para 1080p60 gaming)
+    FFMPEG_BUFSIZE=20000k     # Buffer (2× bitrate)
+    FFMPEG_PRESET=veryfast   # veryfast, superfast, ultrafast (más rápido = menos calidad)
+    GOP_SIZE=15              # Más bajo = más keyframes = menos pixelación en movimientos bruscos
     ```
-5.  **Bandas horizontales / tearing** (opcional): Si el stream se ve "glitcheado" o con bandas, aumenta el buffer UDP:
+5.  **Movimientos bruscos / caídas** (gaming): Si el stream se cae o se pixela al mover la cámara rápido:
     ```env
-    UDP_FIFO_SIZE=1000000     # Default. Prueba 5000000 o 10000000 si persiste
+    FFMPEG_BITRATE=10000k     # O 12000k si tu VPS y Kick lo permiten
+    GOP_SIZE=15               # Keyframes más frecuentes = recuperación más rápida
+    UDP_FIFO_SIZE=5000000     # Buffer UDP mayor (o 10000000 si sigue glitcheando)
+    ```
+    En OBS, usa la misma tasa de bits (10000) y 60 FPS.
+6.  **Bandas horizontales / tearing** (opcional): Si el stream se ve "glitcheado" o con bandas, aumenta el buffer UDP:
+    ```env
+    UDP_FIFO_SIZE=5000000     # Default para gaming. Prueba 10000000 si persiste
     STREAM_FPS=60             # Debe coincidir con OBS (60 para gaming, 30 para ahorrar)
     ```
-6.  **Cortes entre OBS y fallback** (opcional): Si el stream parpadea entre tu señal y el fallback, aumenta el debounce. Si el fallback tarda en aparecer, bájalo o ponlo a 0:
+7.  **Cortes entre OBS y fallback** (opcional): Si el stream parpadea entre tu señal y el fallback, aumenta el debounce. Si el fallback tarda en aparecer, bájalo o ponlo a 0:
     ```env
     FALLBACK_DELAY=0.5        # Segundos antes de activar fallback (default 0.5). 0 = inmediato. Más alto = menos parpadeo
     ```
@@ -59,7 +67,7 @@ Configura `FFMPEG_BITRATE`, `FFMPEG_PRESET` y `STREAM_FPS` en tu `.env` según e
     ```
 2.  **Configurar OBS**:
     - **Codificador**: x264 o NVIDIA NVENC H.264
-    - **Tasa de bits**: La misma que `FFMPEG_BITRATE` en tu `.env` (ej. 8000 para `8000k`)
+    - **Tasa de bits**: La misma que `FFMPEG_BITRATE` en tu `.env` (ej. 10000 para `10000k`, 8000 para `8000k`)
     - **Servicio**: Personalizado
     - **Servidor**: `rtmp://localhost:1935/live` (o `rtmp://localhost:1935` si OBS pide servidor y app por separado)
     - **Clave de retransmisión**: `stream`

@@ -31,13 +31,14 @@ envsubst < /etc/stunnel/stunnel.conf.template > /etc/stunnel/stunnel.conf
 stunnel4 /etc/stunnel/stunnel.conf
 
 # Low-latency encoding params (GOP, bitrate, bufsize, preset; fallback script uses same via env)
-GOP_SIZE="${GOP_SIZE:-30}"
-FFMPEG_BITRATE="${FFMPEG_BITRATE:-8000k}"
-FFMPEG_BUFSIZE="${FFMPEG_BUFSIZE:-16000k}"
+# GOP más bajo (15) = más keyframes = recuperación más rápida en movimientos bruscos
+GOP_SIZE="${GOP_SIZE:-15}"
+FFMPEG_BITRATE="${FFMPEG_BITRATE:-10000k}"
+FFMPEG_BUFSIZE="${FFMPEG_BUFSIZE:-20000k}"
 FFMPEG_PRESET="${FFMPEG_PRESET:-veryfast}"
 BUF_SIZE="${BUF_SIZE:-$FFMPEG_BUFSIZE}"
-# UDP buffer: higher = fewer underruns/tearing, lower = less latency (default 1M for stability)
-UDP_FIFO_SIZE="${UDP_FIFO_SIZE:-1000000}"
+# UDP buffer: más alto = menos caídas/tearing en movimientos bruscos (default 5M para gaming)
+UDP_FIFO_SIZE="${UDP_FIFO_SIZE:-5000000}"
 # Output framerate (match OBS: 60 for gaming, 30 for lower bandwidth)
 STREAM_FPS="${STREAM_FPS:-60}"
 # Debounce antes de iniciar fallback cuando OBS desconecta (evita flicker en reconexiones breves)
@@ -55,9 +56,9 @@ sleep 2
 echo "Starting Master Streamer (UDP Listener)..."
 sleep 3
 while true; do
-    # No -re: input is already a live UDP stream. Larger fifo_size = fewer underruns.
+    # No -re: input is already a live UDP stream. Larger fifo_size = fewer underruns en movimientos bruscos.
     ffmpeg -y -loglevel warning \
-        -thread_queue_size 2048 \
+        -thread_queue_size 4096 \
         -f mpegts -i "udp://127.0.0.1:10000?fifo_size=${UDP_FIFO_SIZE}&overrun_nonfatal=1" \
         -c copy \
         -f flv -flvflags no_duration_filesize "rtmp://127.0.0.1:19350/app/$KICK_STREAM_KEY" >/var/log/nginx/master.log 2>&1
@@ -70,9 +71,9 @@ done &
 echo "Starting Live Push Listener..."
 while true; do
     # Listen on localhost:1936. When Nginx pushes, this wakes up. Uses STREAM_KEY to match nginx push path.
-    # thread_queue_size: buffer for bursty OBS input. -vsync cfr: constant framerate to avoid tearing.
+    # thread_queue_size: buffer para picos de OBS (movimientos bruscos). -vsync cfr: framerate constante.
     ffmpeg -y -loglevel warning \
-        -thread_queue_size 2048 -listen 1 -i "rtmp://127.0.0.1:1936/live/${STREAM_KEY}" \
+        -thread_queue_size 4096 -listen 1 -i "rtmp://127.0.0.1:1936/live/${STREAM_KEY}" \
         -vf "scale=1920:1080,fps=${STREAM_FPS}" \
         -c:v libx264 -preset "${FFMPEG_PRESET}" -b:v "${FFMPEG_BITRATE}" -maxrate "${FFMPEG_BITRATE}" -bufsize "${FFMPEG_BUFSIZE}" -pix_fmt yuv420p -g "${GOP_SIZE}" -tune zerolatency \
         -c:a aac -b:a 160k -ar 44100 \
