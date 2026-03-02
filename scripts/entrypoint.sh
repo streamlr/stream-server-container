@@ -55,13 +55,24 @@ sleep 2
 # Listens on UDP (MPEG-TS), pushes to Stunnel -> Kick. fifo_size absorbs underruns (tearing/banding).
 echo "Starting Master Streamer (UDP Listener)..."
 sleep 3
+# #region agent log
+DEBUG_LOG="${DEBUG_LOG:-/workspace/debug-d2f761.log}"
+touch "${DEBUG_LOG}" 2>/dev/null && chmod 666 "${DEBUG_LOG}" 2>/dev/null || true
+# #endregion
 while true; do
+    # #region agent log
+    _ts=$(date +%s)000; echo "{\"sessionId\":\"d2f761\",\"runId\":\"master\",\"hypothesisId\":\"A\",\"location\":\"entrypoint.sh:Master\",\"message\":\"Master Streamer starting\",\"data\":{},\"timestamp\":$_ts}" >> "${DEBUG_LOG}" 2>/dev/null || true
+    # #endregion
     # No -re: input is already a live UDP stream. Larger fifo_size = fewer underruns en movimientos bruscos.
     ffmpeg -y -loglevel warning \
         -thread_queue_size 4096 \
         -f mpegts -i "udp://127.0.0.1:10000?fifo_size=${UDP_FIFO_SIZE}&overrun_nonfatal=1" \
         -c copy \
         -f flv -flvflags no_duration_filesize "rtmp://127.0.0.1:19350/app/$KICK_STREAM_KEY" >/var/log/nginx/master.log 2>&1
+    _exit=$?
+    # #region agent log
+    _last=$(tail -n 5 /var/log/nginx/master.log 2>/dev/null | tr '\n' ' ' | sed 's/\\/\\\\/g; s/"/\\"/g'); _ts=$(date +%s)000; echo "{\"sessionId\":\"d2f761\",\"runId\":\"master\",\"hypothesisId\":\"A\",\"location\":\"entrypoint.sh:Master\",\"message\":\"Master Streamer exited\",\"data\":{\"exitCode\":$_exit,\"masterLogLast5\":\"$_last\"},\"timestamp\":$_ts}" >> "${DEBUG_LOG}" 2>/dev/null || true
+    # #endregion
     echo "Master Streamer crashed. Log content:"
     tail -n 10 /var/log/nginx/master.log
     sleep 1
@@ -78,6 +89,9 @@ while true; do
         -c:v libx264 -preset "${FFMPEG_PRESET}" -b:v "${FFMPEG_BITRATE}" -maxrate "${FFMPEG_BITRATE}" -bufsize "${FFMPEG_BUFSIZE}" -pix_fmt yuv420p -g "${GOP_SIZE}" -tune zerolatency \
         -c:a aac -b:a 160k -ar 44100 \
         -vsync cfr -f mpegts "udp://127.0.0.1:10000?pkt_size=1316" > /var/log/nginx/live_listener.log 2>&1
+    # #region agent log
+    _ts=$(date +%s)000; echo "{\"sessionId\":\"d2f761\",\"runId\":\"live_listener\",\"hypothesisId\":\"D\",\"location\":\"entrypoint.sh:LiveListener\",\"message\":\"Live Listener finished (OBS disconnected?)\",\"data\":{},\"timestamp\":$_ts}" >> "${DEBUG_LOG}" 2>/dev/null || true
+    # #endregion
     echo "Live Listener finished (stream ended), restarting loop..."
     sleep 1
 done &

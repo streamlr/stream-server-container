@@ -1,5 +1,8 @@
 # Nginx might pass arguments like "app=live name=key" or just inputs.
 echo "$(date): stop_fallback called with args: $@" >> /tmp/switch.log
+# #region agent log
+DEBUG_LOG="${DEBUG_LOG:-/workspace/debug-d2f761.log}"; _ts=$(date +%s)000; echo "{\"sessionId\":\"d2f761\",\"runId\":\"live\",\"hypothesisId\":\"D\",\"location\":\"stop_fallback.sh\",\"message\":\"OBS connected, stopping fallback\",\"data\":{\"args\":\"$*\"},\"timestamp\":$_ts}" >> "$DEBUG_LOG" 2>/dev/null || true
+# #endregion
 
 STREAM_NAME="$1"
 if [[ "$STREAM_NAME" == name=* ]]; then

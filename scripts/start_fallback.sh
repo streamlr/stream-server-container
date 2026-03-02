@@ -57,13 +57,22 @@ run_fallback() {
     fi
 }
 
+# #region agent log
+export DEBUG_LOG="${DEBUG_LOG:-/workspace/debug-d2f761.log}"
+# #endregion
 # Run in background loop so we can be killed by stop_fallback via PID
 (
     while true; do
         run_fallback
+        # #region agent log
+        _err=$(tail -n 1 /tmp/fallback_error.log 2>/dev/null | tr '\n' ' ' | sed 's/\\/\\\\/g; s/"/\\"/g'); _ts=$(date +%s)000; echo "{\"sessionId\":\"d2f761\",\"runId\":\"fallback\",\"hypothesisId\":\"FB_EXIT\",\"location\":\"start_fallback.sh:loop\",\"message\":\"Fallback FFmpeg exited (gap before restart)\",\"data\":{\"fallbackLogLast\":\"$_err\"},\"timestamp\":$_ts}" >> "$DEBUG_LOG" 2>/dev/null || true
+        # #endregion
         echo "$(date): Fallback FFmpeg exited, restarting in 2s..." >> /tmp/switch.log
         sleep 2
     done
 ) &
 echo $! > /tmp/feeder.pid
 echo "$(date): Fallback feeder started (PID $(cat /tmp/feeder.pid))" >> /tmp/switch.log
+# #region agent log
+DEBUG_LOG="${DEBUG_LOG:-/workspace/debug-d2f761.log}"; _ts=$(date +%s)000; _pid=$(cat /tmp/feeder.pid 2>/dev/null); echo "{\"sessionId\":\"d2f761\",\"runId\":\"fallback\",\"hypothesisId\":\"D\",\"location\":\"start_fallback.sh\",\"message\":\"Fallback feeder started\",\"data\":{\"feederPid\":\"$_pid\",\"mode\":\"$1\"},\"timestamp\":$_ts}" >> "$DEBUG_LOG" 2>/dev/null || true
+# #endregion
