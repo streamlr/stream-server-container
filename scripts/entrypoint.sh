@@ -45,20 +45,23 @@ STREAM_FPS="${STREAM_FPS:-60}"
 FALLBACK_DELAY="${FALLBACK_DELAY:-0.5}"
 export GOP_SIZE BUF_SIZE FFMPEG_BITRATE FFMPEG_BUFSIZE FFMPEG_PRESET UDP_FIFO_SIZE STREAM_FPS FALLBACK_DELAY
 
+# #region agent log
+# Create debug log before any www-data script runs; 666 = writable by root and www-data
+DEBUG_LOG="${DEBUG_LOG:-/workspace/debug-d2f761.log}"
+touch "${DEBUG_LOG}" 2>/dev/null && chmod 666 "${DEBUG_LOG}" 2>/dev/null || true
+export DEBUG_LOG
+# #endregion
+
 # Trigger initial Fallback Feeder FIRST so Master has data from the start
 # MUST run as www-data to match other scripts; pass env for FALLBACK_VIDEO and latency params
 echo "Starting initial Fallback Feeder..."
-su -s /bin/bash -c "export FALLBACK_VIDEO=\"$FALLBACK_VIDEO\"; export GOP_SIZE=\"$GOP_SIZE\"; export BUF_SIZE=\"$BUF_SIZE\"; export FFMPEG_BITRATE=\"$FFMPEG_BITRATE\"; export FFMPEG_PRESET=\"$FFMPEG_PRESET\"; export STREAM_FPS=\"$STREAM_FPS\"; /scripts/start_fallback.sh 'initial'" www-data &
+su -s /bin/bash -c "export FALLBACK_VIDEO=\"$FALLBACK_VIDEO\"; export GOP_SIZE=\"$GOP_SIZE\"; export BUF_SIZE=\"$BUF_SIZE\"; export FFMPEG_BITRATE=\"$FFMPEG_BITRATE\"; export FFMPEG_PRESET=\"$FFMPEG_PRESET\"; export STREAM_FPS=\"$STREAM_FPS\"; export DEBUG_LOG=\"$DEBUG_LOG\"; /scripts/start_fallback.sh 'initial'" www-data &
 sleep 2
 
 # Start the MASTER STREAMER (Persistent connection to Kick)
 # Listens on UDP (MPEG-TS), pushes to Stunnel -> Kick. fifo_size absorbs underruns (tearing/banding).
 echo "Starting Master Streamer (UDP Listener)..."
 sleep 3
-# #region agent log
-DEBUG_LOG="${DEBUG_LOG:-/workspace/debug-d2f761.log}"
-touch "${DEBUG_LOG}" 2>/dev/null && chmod 666 "${DEBUG_LOG}" 2>/dev/null || true
-# #endregion
 while true; do
     # #region agent log
     _ts=$(date +%s)000; echo "{\"sessionId\":\"d2f761\",\"runId\":\"master\",\"hypothesisId\":\"A\",\"location\":\"entrypoint.sh:Master\",\"message\":\"Master Streamer starting\",\"data\":{},\"timestamp\":$_ts}" >> "${DEBUG_LOG}" 2>/dev/null || true
