@@ -67,7 +67,9 @@ while true; do
     _ts=$(date +%s)000; echo "{\"sessionId\":\"d2f761\",\"runId\":\"master\",\"hypothesisId\":\"A\",\"location\":\"entrypoint.sh:Master\",\"message\":\"Master Streamer starting\",\"data\":{},\"timestamp\":$_ts}" >> "${DEBUG_LOG}" 2>/dev/null || true
     # #endregion
     # No -re: input is already a live UDP stream. Larger fifo_size = fewer underruns en movimientos bruscos.
+    # -fflags +discardcorrupt+genpts -err_detect ignore_err: descarta paquetes TS corruptos (UDP loss/VPS) y no aborta por PPS/slice errors
     ffmpeg -y -loglevel warning \
+        -fflags +discardcorrupt+genpts -err_detect ignore_err \
         -thread_queue_size 4096 \
         -f mpegts -i "udp://127.0.0.1:10000?fifo_size=${UDP_FIFO_SIZE}&overrun_nonfatal=1" \
         -c copy \
