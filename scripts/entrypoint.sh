@@ -74,7 +74,7 @@ while true; do
         -f flv -flvflags no_duration_filesize "rtmp://127.0.0.1:19350/app/$KICK_STREAM_KEY" >/var/log/nginx/master.log 2>&1
     _exit=$?
     # #region agent log
-    _last=$(tail -n 5 /var/log/nginx/master.log 2>/dev/null | tr '\n' ' ' | sed 's/\\/\\\\/g; s/"/\\"/g'); _ts=$(date +%s)000; echo "{\"sessionId\":\"d2f761\",\"runId\":\"master\",\"hypothesisId\":\"A\",\"location\":\"entrypoint.sh:Master\",\"message\":\"Master Streamer exited\",\"data\":{\"exitCode\":$_exit,\"masterLogLast5\":\"$_last\"},\"timestamp\":$_ts}" >> "${DEBUG_LOG}" 2>/dev/null || true
+    _ts=$(date +%s)000; echo "{\"sessionId\":\"d2f761\",\"runId\":\"master\",\"hypothesisId\":\"A\",\"location\":\"entrypoint.sh:Master\",\"message\":\"Master Streamer exited\",\"data\":{\"exitCode\":$_exit},\"timestamp\":$_ts}" >> "${DEBUG_LOG}" 2>/dev/null || true
     # #endregion
     echo "Master Streamer crashed. Log content:"
     tail -n 10 /var/log/nginx/master.log
